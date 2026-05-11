@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TecManager - Vitrine</title>
+    <style>
+        :root {
+            --primary: #0f766e;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #0f172a;
+            --muted: #64748b;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #f1f5f9;
+            color: var(--text);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: white;
+            padding: 16px 20px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+        }
+
+        .header h1 { font-size: 1.3rem; font-weight: 700; }
+        .header p { font-size: 0.8rem; opacity: 0.7; margin-top: 2px; }
+
+        .nav-tabs {
+            display: flex;
+            background: var(--card);
+            overflow-x: auto;
+            position: sticky;
+            top: 70px;
+            z-index: 99;
+            border-bottom: 2px solid var(--border);
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .nav-tabs button {
+            flex: 1;
+            min-width: 80px;
+            padding: 12px 8px;
+            border: none;
+            background: none;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--muted);
+            cursor: pointer;
+            white-space: nowrap;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .nav-tabs button.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .content {
+            padding: 16px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            border: 1px solid var(--border);
+        }
+
+        .card h2 {
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--muted);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .evento-item {
+            padding: 12px;
+            background: #f8fafc;
+            border-left: 4px solid var(--primary);
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+
+        .evento-item strong { font-size: 0.95rem; }
+        .evento-item .info { font-size: 0.8rem; color: var(--muted); margin-top: 4px; }
+
+        .tag {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin: 2px;
+        }
+        .tag.azul { background: #dbeafe; color: #1e40af; }
+        .tag.laranja { background: #fef3c7; color: #92400e; }
+        .tag.verde { background: #d1fae5; color: #065f46; }
+        .tag.roxo { background: #f3e8ff; color: #6b21a8; }
+
+        .demanda-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            background: #f8fafc;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .demanda-item .info { flex: 1; font-size: 0.85rem; }
+
+        button {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-check {
+            background: var(--success);
+            color: white;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        .btn-outline {
+            background: white;
+            border: 2px solid var(--border);
+            color: var(--text);
+        }
+        button:active { transform: scale(0.96); }
+
+        .mes-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 3px;
+            text-align: center;
+            font-size: 0.75rem;
+        }
+
+        .dia {
+            padding: 6px 2px;
+            border-radius: 6px;
+            min-height: 55px;
+            font-size: 0.7rem;
+            border: 1px solid var(--border);
+            background: white;
+            position: relative;
+        }
+        .dia.fds-a { background: #eff6ff; border-color: #93c5fd; }
+        .dia.fds-b { background: #fffbeb; border-color: #fcd34d; }
+        .dia .num { font-weight: 700; font-size: 0.8rem; }
+
+        select, input {
+            width: 100%;
+            padding: 10px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            background: white;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            z-index: 999;
+            animation: fadeInUp 0.3s;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        .empty { text-align: center; padding: 30px; color: var(--muted); font-size: 0.9rem; }
+
+        @media (min-width: 600px) {
+            .content { padding: 20px; }
+            .mes-grid { gap: 4px; font-size: 0.8rem; }
+            .dia { padding: 8px 4px; min-height: 65px; font-size: 0.8rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📱 TecManager Vitrine</h1>
+        <p>Gestão de Som e Luz</p>
+    </div>
+
+    <div class="nav-tabs" id="navTabs">
+        <button class="active" data-tab="demandas">📋 Demandas</button>
+        <button data-tab="calendario">📅 Calendário</button>
+        <button data-tab="eventos">🎬 Eventos</button>
+        <button data-tab="atas">📝 Atas</button>
+        <button data-tab="regras">📜 Regras</button>
+        <button data-tab="troca">🔄 Trocar Folga</button>
+    </div>
+
+    <div class="content" id="content">
+        <div class="loading">
+            <div class="spinner"></div>
+            <p>Carregando dados...</p>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbx1KKR_kmIX0YZ8uloXI7GJ-_M6EpgDLJK9ufJ0RQu8bPS3R_FPLNKe_IKWRMRTTDZhtw/exec';
+        
+        let dados = { eventos: [], tecnicos: [], regras: [], atas: [], demandas: [], riders: [], pedidosFolga: [], calendario: { compensacoes: [], trocas: [], escalasEspeciais: [] } };
+        let activeTab = 'demandas';
+
+        // Navegação
+        document.querySelectorAll('#navTabs button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#navTabs button').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                activeTab = btn.dataset.tab;
+                renderizar();
+            });
+        });
+
+        function showToast(msg) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2500);
+        }
+
+        async function carregarDados() {
+            try {
+                const resp = await fetch(API_URL);
+                const todosDados = await resp.json();
+                
+                if (todosDados.eventos) dados.eventos = todosDados.eventos.map(e => ({
+                    ...e,
+                    datas: typeof e.datas === 'string' ? JSON.parse(e.datas) : (e.datas || []),
+                    equipe_ids: typeof e.equipe_ids === 'string' ? JSON.parse(e.equipe_ids) : (e.equipe_ids || [])
+                }));
+                if (todosDados.tecnicos) dados.tecnicos = todosDados.tecnicos.map(t => ({
+                    ...t,
+                    horarios: typeof t.horarios === 'string' ? JSON.parse(t.horarios) : (t.horarios || {})
+                }));
+                if (todosDados.regras) dados.regras = todosDados.regras;
+                if (todosDados.atas) dados.atas = todosDados.atas;
+                if (todosDados.demandas) dados.demandas = todosDados.demandas;
+                if (todosDados.riders) dados.riders = todosDados.riders;
+                if (todosDados.pedidosFolga) dados.pedidosFolga = todosDados.pedidosFolga;
+                
+                // Processar calendario
+                if (todosDados.calendario) {
+                    dados.calendario = { compensacoes: [], trocas: [], escalasEspeciais: [] };
+                    todosDados.calendario.forEach(item => {
+                        const parsed = typeof item.dados === 'string' ? JSON.parse(item.dados) : (item.dados || []);
+                        if (item.tipo === 'compensacoes') dados.calendario.compensacoes = parsed;
+                        if (item.tipo === 'trocas') dados.calendario.trocas = parsed;
+                        if (item.tipo === 'escalasEspeciais') dados.calendario.escalasEspeciais = parsed;
+                    });
+                }
+                
+                renderizar();
+            } catch(e) {
+                document.getElementById('content').innerHTML = '<div class="empty">❌ Erro ao carregar dados<br><small>Verifique sua conexão</small></div>';
+            }
+        }
+
+        function formatarData(dataStr) {
+            if (!dataStr) return '';
+            const [ano, mes, dia] = dataStr.split('-');
+            return `${dia}/${mes}/${ano}`;
+        }
+
+        function renderizar() {
+            const content = document.getElementById('content');
+            
+            switch(activeTab) {
+                case 'demandas': content.innerHTML = renderDemandas(); break;
+                case 'calendario': content.innerHTML = renderCalendario(); break;
+                case 'eventos': content.innerHTML = renderEventos(); break;
+                case 'atas': content.innerHTML = renderAtas(); break;
+                case 'regras': content.innerHTML = renderRegras(); break;
+                case 'troca': content.innerHTML = renderTrocaFolga(); break;
+            }
+        }
+
+        // ========== DEMANDAS ==========
+        function renderDemandas() {
+            const tecnicosComDemandas = dados.tecnicos.filter(t => {
+                return dados.demandas.some(d => d.tecnico_id == t.id);
+            });
+
+            if (tecnicosComDemandas.length === 0) {
+                return '<div class="empty">📋 Nenhuma demanda pendente</div>';
+            }
+
+            return tecnicosComDemandas.map(tecnico => {
+                const demandasTecnico = dados.demandas.filter(d => d.tecnico_id == tecnico.id);
+                const eventoIds = [...new Set(demandasTecnico.map(d => d.evento_id))];
+                
+                return `
+                    <div class="card">
+                        <h2>👤 ${tecnico.nome} <span class="tag azul">${tecnico.funcao}</span></h2>
+                        ${eventoIds.map(evId => {
+                            const evento = dados.eventos.find(e => e.id == evId);
+                            const demanda = demandasTecnico.find(d => d.evento_id == evId);
+                            if (!evento) return '';
+                            return `
+                                <div class="demanda-item">
+                                    <div class="info">
+                                        <strong>${evento.nome || 'Evento'}</strong><br>
+                                        <small>📍 ${evento.local || '-'} | 📅 ${(evento.datas||[]).map(d => formatarData(d.data)).join(', ')}</small><br>
+                                        <small>Status: <span class="tag ${demanda?.status === 'check' ? 'verde' : 'laranja'}">${demanda?.status === 'check' ? '✅ Visto' : '⏳ Pendente'}</span></small>
+                                    </div>
+                                    ${demanda && demanda.status !== 'check' ? 
+                                        `<button class="btn-check" onclick="darCheck(${demanda.id})">✅<br>Visto</button>` : 
+                                        ''}
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function darCheck(demandaId) {
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        acao: 'dar_check',
+                        aba: 'demandas',
+                        demanda_id: demandaId
+                    })
+                });
+                showToast('✅ Demanda confirmada!');
+                setTimeout(carregarDados, 1000);
+            } catch(e) {
+                showToast('❌ Erro ao confirmar');
+            }
+        }
+
+        // ========== CALENDÁRIO ==========
+        function renderCalendario() {
+            const hoje = new Date();
+            const ano = hoje.getFullYear();
+            let html = '';
+            
+            for (let m = 0; m < 3; m++) {
+                const data = new Date(ano, hoje.getMonth() + m, 1);
+                const nomeMes = data.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+                const diasNoMes = new Date(data.getFullYear(), data.getMonth() + 1, 0).getDate();
+                const primeiroDia = data.getDay() === 0 ? 6 : data.getDay() - 1;
+                
+                let diasHTML = '';
+                for (let i = 0; i < primeiroDia; i++) {
+                    diasHTML += '<div class="dia" style="background:#fafafa;"></div>';
+                }
+                
+                for (let dia = 1; dia <= diasNoMes; dia++) {
+                    const dataStr = `${data.getFullYear()}-${String(data.getMonth()+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+                    const diaSemana = new Date(data.getFullYear(), data.getMonth(), dia).getDay();
+                    const isFDS = diaSemana === 0 || diaSemana === 6;
+                    
+                    // Simplificado: escala baseada na semana do ano
+                    const semanaAno = Math.ceil((dia + primeiroDia) / 7);
+                    const escalaFDS = semanaAno % 2 === 0 ? 'A' : 'B';
+                    
+                    diasHTML += `
+                        <div class="dia ${isFDS ? (escalaFDS === 'A' ? 'fds-a' : 'fds-b') : ''}">
+                            <div class="num">${dia}</div>
+                            ${isFDS ? `<small>FDS ${escalaFDS}</small>` : ''}
+                        </div>
+                    `;
+                }
+                
+                html += `
+                    <div class="card">
+                        <h2>📅 ${nomeMes}</h2>
+                        <div class="mes-grid" style="font-weight:700;color:var(--muted);margin-bottom:4px;">
+                            <div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div><div>Dom</div>
+                        </div>
+                        <div class="mes-grid">${diasHTML}</div>
+                    </div>
+                `;
+            }
+            
+            return html;
+        }
+
+        // ========== EVENTOS ==========
+        function renderEventos() {
+            const hoje = new Date();
+            hoje.setHours(0,0,0,0);
+            const eventosAtivos = dados.eventos.filter(ev => {
+                if (!ev.datas || ev.datas.length === 0) return true;
+                const ultimaData = new Date(Math.max(...ev.datas.map(d => new Date(d.data + 'T00:00:00'))));
+                ultimaData.setDate(ultimaData.getDate() + 4);
+                return hoje <= ultimaData;
+            });
+
+            if (eventosAtivos.length === 0) {
+                return '<div class="empty">🎬 Nenhum evento ativo</div>';
+            }
+
+            return eventosAtivos.map(ev => `
+                <div class="card">
+                    <div class="evento-item">
+                        <strong>🎬 ${ev.nome || 'Sem nome'}</strong>
+                        <span class="tag azul">${ev.tipo || '-'}</span>
+                        <div class="info">
+                            📍 ${ev.local || '-'}<br>
+                            📅 ${(ev.datas||[]).map(d => formatarData(d.data) + ' às ' + (d.hora||'--:--')).join(' | ')}<br>
+                            👤 ${ev.programador || '-'}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ========== ATAS ==========
+        function renderAtas() {
+            if (dados.atas.length === 0) {
+                return '<div class="empty">📝 Nenhuma ata registrada</div>';
+            }
+
+            return dados.atas.sort((a,b) => b.data.localeCompare(a.data)).map(a => `
+                <div class="card">
+                    <div class="evento-item">
+                        <strong>📝 ${a.titulo || 'Sem título'}</strong>
+                        <span class="tag roxo">📅 ${formatarData(a.data)}</span>
+                        <div class="info">
+                            ${a.temas ? '📌 ' + a.temas + '<br>' : ''}
+                            👥 ${a.presentes || 'Não informado'}<br>
+                            ${(a.resumo||'').substring(0, 150)}...
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ========== REGRAS ==========
+        function renderRegras() {
+            if (dados.regras.length === 0) {
+                return '<div class="empty">📜 Nenhuma regra cadastrada</div>';
+            }
+
+            return dados.regras.map(r => `
+                <div class="card">
+                    <div class="evento-item">
+                        <strong>📌 ${r.titulo || 'Sem título'}</strong>
+                        <div class="info">${r.texto || 'Sem descrição'}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ========== TROCA DE FOLGA ==========
+        function renderTrocaFolga() {
+            const tecnicosOptions = dados.tecnicos.map(t => 
+                `<option value="${t.id}">${t.nome} (${t.funcao})</option>`
+            ).join('');
+
+            return `
+                <div class="card">
+                    <h2>🔄 Solicitar Troca de Folga</h2>
+                    <select id="trocaSolicitante">
+                        <option value="">Quem está pedindo</option>
+                        ${tecnicosOptions}
+                    </select>
+                    <select id="trocaAlvo">
+                        <option value="">Trocar com</option>
+                        ${tecnicosOptions}
+                    </select>
+                    <select id="trocaEscalaOrigem">
+                        <option value="">Escala de origem</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                    </select>
+                    <select id="trocaEscalaDestino">
+                        <option value="">Escala de destino</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                    </select>
+                    <input type="date" id="trocaData" placeholder="A partir de">
+                    <input type="text" id="trocaMotivo" placeholder="Motivo da troca">
+                    <button class="btn-primary" onclick="solicitarTroca()" style="width:100%;">🔄 Solicitar Troca</button>
+                </div>
+                
+                <div class="card">
+                    <h2>📋 Trocas Pendentes</h2>
+                    ${dados.pedidosFolga.length === 0 ? '<div class="empty">Nenhuma troca pendente</div>' :
+                        dados.pedidosFolga.filter(p => p.status === 'Pendente').map(p => {
+                            const sol = dados.tecnicos.find(t => t.id == p.tecnico_solicitante_id);
+                            const alvo = dados.tecnicos.find(t => t.id == p.tecnico_alvo_id);
+                            return `
+                                <div class="demanda-item">
+                                    <div class="info">
+                                        ${sol?.nome || '?'} ↔ ${alvo?.nome || '?'}<br>
+                                        <small>${p.escala_origem} → ${p.escala_destino} | ${p.motivo || '-'}</small>
+                                    </div>
+                                    <span class="tag laranja">⏳</span>
+                                </div>
+                            `;
+                        }).join('')
+                    }
+                </div>
+            `;
+        }
+
+        async function solicitarTroca() {
+            const solicitanteId = document.getElementById('trocaSolicitante')?.value;
+            const alvoId = document.getElementById('trocaAlvo')?.value;
+            const origem = document.getElementById('trocaEscalaOrigem')?.value;
+            const destino = document.getElementById('trocaEscalaDestino')?.value;
+            const data = document.getElementById('trocaData')?.value;
+            const motivo = document.getElementById('trocaMotivo')?.value;
+
+            if (!solicitanteId || !alvoId || !origem || !destino) {
+                showToast('⚠️ Preencha todos os campos');
+                return;
+            }
+            if (solicitanteId === alvoId) { showToast('⚠️ Selecione técnicos diferentes'); return; }
+            if (origem === destino) { showToast('⚠️ Escalas devem ser diferentes'); return; }
+
+            const pedido = {
+                id: Date.now(),
+                tecnico_solicitante_id: parseInt(solicitanteId),
+                tecnico_alvo_id: parseInt(alvoId),
+                escala_origem: origem,
+                escala_destino: destino,
+                data_inicio: data,
+                motivo: motivo,
+                status: 'Pendente',
+                data_solicitacao: new Date().toISOString()
+            };
+
+            dados.pedidosFolga.push(pedido);
+
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ acao: 'salvar_tudo', aba: 'pedidosFolga', itens: dados.pedidosFolga })
+                });
+                showToast('✅ Troca solicitada!');
+                renderizar();
+            } catch(e) {
+                showToast('❌ Erro ao enviar');
+            }
+        }
+
+        // Iniciar
+        carregarDados();
+    </script>
+</body>
+</html>
