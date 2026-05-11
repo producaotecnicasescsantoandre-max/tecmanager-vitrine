@@ -655,19 +655,24 @@
                 data_solicitacao: new Date().toISOString()
             };
 
-            // Adicionar ao array local
             if (!dados.pedidosFolga) dados.pedidosFolga = [];
             dados.pedidosFolga.push(pedido);
 
+            // Usar URL com parâmetros para contornar CORS
+            const url = API_URL + '?aba=salvarPedido&dados=' + encodeURIComponent(JSON.stringify({ 
+                aba: 'pedidosFolga', 
+                itens: dados.pedidosFolga 
+            }));
+
             try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain' },
-                    body: JSON.stringify({ acao: 'salvar_tudo', aba: 'pedidosFolga', itens: dados.pedidosFolga })
-                });
-                const result = await response.text();
-                showToast('✅ Troca solicitada!');
-                renderizar();
+                const resp = await fetch(url);
+                const result = await resp.json();
+                if (result.sucesso) {
+                    showToast('✅ Troca solicitada!');
+                    renderizar();
+                } else {
+                    showToast('❌ Erro ao salvar');
+                }
             } catch(e) {
                 showToast('❌ Erro: ' + e.message);
             }
