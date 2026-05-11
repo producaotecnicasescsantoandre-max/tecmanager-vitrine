@@ -405,6 +405,20 @@
                 const diasNoMes = new Date(data.getFullYear(), data.getMonth() + 1, 0).getDate();
                 const primeiroDia = data.getDay() === 0 ? 6 : data.getDay() - 1;
                 
+                // Função para calcular escala correta (usando número da semana)
+                function getEscala(dataDia) {
+                    const diaSemana = dataDia.getDay();
+                    let sabado;
+                    if (diaSemana === 6) sabado = dataDia;
+                    else if (diaSemana === 0) { sabado = new Date(dataDia); sabado.setDate(dataDia.getDate() - 1); }
+                    else { sabado = new Date(dataDia); sabado.setDate(dataDia.getDate() + (6 - diaSemana)); }
+                    
+                    const inicioAno = new Date(sabado.getFullYear(), 0, 1);
+                    const dias = Math.floor((sabado - inicioAno) / (1000 * 60 * 60 * 24));
+                    const numSemana = Math.ceil((dias + inicioAno.getDay() + 1) / 7);
+                    return numSemana % 2 === 0 ? 'A' : 'B';
+                }
+                
                 let diasHTML = '';
                 for (let i = 0; i < primeiroDia; i++) {
                     diasHTML += '<div class="dia" style="background:#fafafa;"></div>';
@@ -412,17 +426,21 @@
                 
                 for (let dia = 1; dia <= diasNoMes; dia++) {
                     const dataStr = `${data.getFullYear()}-${String(data.getMonth()+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
-                    const diaSemana = new Date(data.getFullYear(), data.getMonth(), dia).getDay();
+                    const dataDia = new Date(data.getFullYear(), data.getMonth(), dia);
+                    const diaSemana = dataDia.getDay();
                     const isFDS = diaSemana === 0 || diaSemana === 6;
+                    const escalaFDS = isFDS ? getEscala(dataDia) : '';
                     
-                    // Simplificado: escala baseada na semana do ano
-                    const semanaAno = Math.ceil((dia + primeiroDia) / 7);
-                    const escalaFDS = semanaAno % 2 === 0 ? 'A' : 'B';
+                    const tecnicosFDS = isFDS ? dados.tecnicos.filter(t => t.escalaFDS === escalaFDS) : [];
+                    const eventosDia = dados.eventos.filter(ev => (ev.datas || []).some(d => d.data === dataStr));
                     
                     diasHTML += `
-                        <div class="dia ${isFDS ? (escalaFDS === 'A' ? 'fds-a' : 'fds-b') : ''}">
+                        <div class="dia ${isFDS ? (escalaFDS === 'A' ? 'fds-a' : 'fds-b') : ''}" 
+                             style="cursor:pointer;" 
+                             onclick="mostrarDetalhesDia('${dataStr}', '${isFDS ? escalaFDS : ''}')">
                             <div class="num">${dia}</div>
                             ${isFDS ? `<small>FDS ${escalaFDS}</small>` : ''}
+                            ${eventosDia.length > 0 ? `<small>🎬${eventosDia.length}</small>` : ''}
                         </div>
                     `;
                 }
@@ -441,6 +459,55 @@
             return html;
         }
 
+        
+        function mostrarDetalhesDia(dataStr, escalaFDS) {
+            const tecnicosEscala = escalaFDS ? dados.tecnicos.filter(t => t.escalaFDS === escalaFDS) : [];
+            const eventosDia = dados.eventos.filter(ev => (ev.datas || []).some(d => d.data === dataStr));
+            
+            let html = `<div class="card" style="position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:999; max-width:90%; width:400px; max-height:80vh; overflow-y:auto; box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <strong>📅 ${formatarData(dataStr)}</strong>
+                    <button onclick="this.closest('.card').remove()" style="background:#ef4444; color:white; border:none; padding:6px 12px; border-radius:20px; cursor:pointer;">✕</button>
+                </div>`;
+            
+            if (escalaFDS) {
+                html += `<p style="font-weight:600; margin-bottom:8px;">Escala FDS: <span class="tag ${escalaFDS === 'A' ? 'azul' : 'laranja'}">${escalaFDS}</span></p>`;
+                html += '<p><strong>Técnicos:</strong></p>';
+                if (tecnicosEscala.length > 0) {
+                    tecnicosEscala.forEach(t => {
+                        html += `<span class="tag ${t.funcao === 'som' ? 'azul' : 'laranja'}">${t.nome} (${t.funcao})</span> `;
+                    });
+                } else {
+                    html += '<p style="color:var(--muted);">Nenhum técnico nesta escala</p>';
+                }
+            }
+            
+            html += '<p style="margin-top:12px;"><strong>🎬 Eventos do dia:</strong></p>';
+            if (eventosDia.length > 0) {
+                eventosDia.forEach(ev => {
+                    const datasDoDia = (ev.datas||[]).filter(d => d.data === dataStr);
+                    html += `<div class="evento-item">
+                        <strong>${ev.nome || 'Evento'}</strong><br>
+                        <small>📍 ${ev.local || '-'} | 🕐 ${datasDoDia.map(d => d.hora||'--:--').join(', ')}</small>
+                    </div>`;
+                });
+            } else {
+                html += '<p style="color:var(--muted);">Nenhum evento neste dia</p>';
+            }
+            
+            html += '</div>';
+            
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:998;';
+            overlay.onclick = function() {
+                overlay.remove();
+                document.querySelector('.card[style*="position:fixed"]')?.remove();
+            };
+            document.body.appendChild(overlay);
+            document.body.insertAdjacentHTML('beforeend', html);
+        }
+
+        
         // ========== EVENTOS ==========
         function renderEventos() {
             const hoje = new Date();
