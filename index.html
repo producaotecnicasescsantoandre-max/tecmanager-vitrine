@@ -377,19 +377,27 @@
 
         async function darCheck(demandaId) {
             try {
-                await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        acao: 'dar_check',
-                        aba: 'demandas',
-                        demanda_id: demandaId
-                    })
-                });
-                showToast('✅ Demanda confirmada!');
-                setTimeout(carregarDados, 1000);
+                const demanda = dados.demandas.find(d => d.id === demandaId);
+                if (!demanda) return;
+                
+                demanda.status = 'check';
+                
+                const url = API_URL + '?aba=demandas&dados=' + encodeURIComponent(JSON.stringify({ 
+                    aba: 'demandas', 
+                    itens: dados.demandas 
+                }));
+                
+                const resp = await fetch(url);
+                const result = await resp.json();
+                
+                if (result.sucesso) {
+                    showToast('✅ Demanda confirmada!');
+                    renderizar();
+                } else {
+                    showToast('❌ Erro ao salvar');
+                }
             } catch(e) {
-                showToast('❌ Erro ao confirmar');
+                showToast('❌ Erro: ' + e.message);
             }
         }
 
