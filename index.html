@@ -655,18 +655,21 @@
                 data_solicitacao: new Date().toISOString()
             };
 
+            // Adicionar ao array local
+            if (!dados.pedidosFolga) dados.pedidosFolga = [];
             dados.pedidosFolga.push(pedido);
 
             try {
-                await fetch(API_URL, {
+                const response = await fetch(API_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'text/plain' },
                     body: JSON.stringify({ acao: 'salvar_tudo', aba: 'pedidosFolga', itens: dados.pedidosFolga })
                 });
+                const result = await response.text();
                 showToast('✅ Troca solicitada!');
                 renderizar();
             } catch(e) {
-                showToast('❌ Erro ao enviar');
+                showToast('❌ Erro: ' + e.message);
             }
         }
 
